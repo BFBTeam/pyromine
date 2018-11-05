@@ -30,7 +30,7 @@ class Config:
         "enum": ENUM,
     }
 
-    def __init__(self, file: str, __type: int=DETECT, default = None):
+    def __init__(self, file: str, __type: int=DETECT, default=None):
         self.load(file, __type, default)
 
     def reload(self):

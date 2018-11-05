@@ -8,6 +8,10 @@ from logzero import logger
 import memory_manager
 
 
+class ServerError(Exception):
+    pass
+
+
 class Server:
     BROADCAST_CHANNEL_ADMINISTRATIVE = "pyromine.broadcast.admin"
     BROADCAST_CHANNEL_USERS = "pyromine.broadcast.user"
@@ -138,7 +142,7 @@ class Server:
             logger.info("pocketmine.server.start")
 
 
-        except Exception as e:
+        except ServerError as e:
             logger.error(e)
             pass
 

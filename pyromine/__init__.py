@@ -1,5 +1,2 @@
-from .server import Server
-from .memory_manager import MemoryManager
-
-
-__all__ = ['Server','MemoryManager']
+__author__ = 'Clark Dwain Luna'
+__version__ = '1.0.0.dev'
