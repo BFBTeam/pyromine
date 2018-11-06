@@ -1,3 +1,21 @@
+# Generated
+players/*
+worlds/*
+plugin_data/*
+plugins/*
+bin*/*
+timings/*
+crashdumps/*
+*.log
+*.txt
+server.properties
+/pyromine.yml
+memory_dumps/*
+resource_packs/
+
+# ide
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

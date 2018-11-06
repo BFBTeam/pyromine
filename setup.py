@@ -7,7 +7,9 @@ with open('README.rst') as f:
 with open('LICENSE') as f:
     license = f.read()
 
-requirements = []
+requirements = [
+    'logzero'
+]
 
 setup(
     name='pyromine',

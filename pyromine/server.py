@@ -5,8 +5,7 @@ from pathlib import Path
 
 from logzero import logger
 
-import memory_manager
-
+from pyromine.utils import *
 
 class ServerError(Exception):
     pass
@@ -79,8 +78,8 @@ class Server:
 
     query_regenerate_task = None
 
-    properties = None
-    property_cache = {}
+    properties: Config = None
+    property_cache = []
 
     config = None
     players = None
@@ -89,55 +88,107 @@ class Server:
     levels = None
     level_default = None
     def __init__(self, data_path, plugin_path):
+        self.instance = self
+
+        # TODO: SleeperHandler
+        self.tick_sleeper = ''
+
         try:
             if not Path(data_path + "worlds/").is_dir():
                 os.mkdir(data_path + "worlds/", 0o777)
+
             if not Path(data_path + "players/").is_dir():
                 os.mkdir(data_path + "players/", 0o777)
+
             if not Path(plugin_path).is_dir():
                 os.mkdir(plugin_path, 0o777)
 
             self.data_path = os.path.realpath(data_path)
             self.plugin_path = os.path.realpath(plugin_path)
 
-            """pyromine.yml"""
             logger.info("Loading pyromine.yml")
+            if not os.path.exists(data_path + "pyromine.yml"):
+                content = 'test: test'
+            self.config = Config(data_path + "pyromine.yml", Config.YAML, [])
 
-            """language support"""
-            try:
-                pass
-            except FileNotFoundError as e:
-                logger.warning("Fallback language")
-                return
+            # DEBUG = int(self.get_property("debug.level", 1))
 
             logger.info("Loading server properties...")
-            # self.properties = Config(self.data_path + "server.properties", Config.PROPERTIES, {
-            #     "motd": "Pyromine Server",
-            #     "server-port": 19132,
-            #     "whitelist": False,
-            #     "announce-player-achievements": True,
-            #     "spawn-protection": 16,
-            #     "max-players": 20,
-            #     "spawn-animals": True,
-            #     "spawn-mobs": True,
-            #     "gamemode": 0,
-            #     "force-gamemode": False,
-            #     "hardcore": False,
-            #     "pvp": False,
-            #     "difficulty": 1,
-            #     "generator-settings": "",
-            #     "level-name": "world",
-            #     "level-seed": "",
-            #     "level-type": "DEFAULT",
-            #     "enable-query": True,
-            #     "enable-rcon": False,
-            #     "rcon.password": base64.b64encode(os.urandom(20))[3:10],
-            #     "auto-save": True,
-            #     "view_distance": 8,
-            #     "xbox-auth": True
-            # })
+
+            conf_sec = dict()
+            conf_sec["motd"] = "MCPE Server running on Pyromine"
+            conf_sec["sub-motd"] = "Pyromine"
+            conf_sec["server-port"] = 19132
+            conf_sec["server-ip"] = "0.0.0.0"
+            conf_sec["view-distance"] = 10
+            conf_sec["white-list"] = False
+            conf_sec["achievements"] = True
+            conf_sec["announce-player-achievements"] = True
+            conf_sec["spawn-protection"] = 16
+            conf_sec["max-players"] = 20
+            conf_sec["allow-flight"] = False
+            conf_sec["spawn-animals"] = True
+            conf_sec["spawn-mobs"] = True
+            conf_sec["gamemode"] = 0
+            conf_sec["force-gamemode"] = False
+            conf_sec["hardcore"] = False
+            conf_sec["pvp"] = True
+            conf_sec["difficulty"] = 1
+            conf_sec["generator-settings"] = ""
+            conf_sec["level-name"] = "world"
+            conf_sec["level-seed"] = ""
+            conf_sec["level-type"] = "DEFAULT"
+            conf_sec["allow-nether"] = True
+            conf_sec["enable-query"] = True
+            conf_sec["enable-rcon"] = False
+            conf_sec["rcon.password"] = base64.b64encode(os.urandom(20))[3:10].decode()
+            conf_sec["auto-save"] = True
+            conf_sec["force-resources"] = False
+            conf_sec["bug-report"] = True
+            conf_sec["xbox-auth"] = True
+
+            self.properties = Config(self.data_path + "server.properties", Config.PROPERTIES, conf_sec)
 
             # self.memory_manager = memory_manager.MemoryManager()
+
+            # pool_size = self.get_property("settings.async-workers", "auto")
+            # if pool_size is "auto":
+            #     pool_size = 2
+            #     # TODO: processor
+            #     processor = 0
+            #
+            #     if processor > 0:
+            #         pool_size = max(1, processor)
+            # else:
+            #     pool_size = max(1, int(pool_size))
+
+            # TODO: async_pool
+            self.async_pool = 0
+
+            # # TODO: network compression
+            # if self.get_property("network.batch-threshold", 256) >= 0:
+            #     pass
+            # else:
+            #     pass
+            #
+            # self.network_compression_async = bool(self.get_property("network.async-compression", True))
+            #
+            # # TODO: network cipher
+            #
+            # self.auto_tick_rate = bool(self.get_property("level-settings.auto-tick-rate", True))
+            # self.auto_tick_rate_limit = int(self.get_property("level-settings.auto-tick-rate-limit", 20))
+            # self.always_tick_players = bool(self.get_property("level-settings.always-tick-players", False))
+            # self.base_tick_rate = int(self.get_property("level-settings.base-tick-rate", 1))
+            #
+            # # TODO: Terminal.has_formatting_close
+            # self.do_title_tick = bool(self.get_property("console.title-tick", True))
+            #
+            # # TODO: SleeperNotifier
+            # console_notifier = ''
+            # # TODO: CommandReader
+            # self.console = ''
+            # self.tick_sleeper = ''
+
 
             logger.info("pocketmine.server.start")
 
@@ -362,15 +413,17 @@ class Server:
 
     @classmethod
     def get_property(cls, variable, default_value=None):
-        v = getopt.getopt("", ["variable::"])
-        if variable not in cls.property_cache:
-            v = getopt.getopt("", ["variable::"])
-            print(v)
-            if v[variable]:
-                cls.property_cache[variable] = v[variable]
-            else:
-                cls.property_cache[variable] = cls.config.get_nested(variable)
-        return cls.property_cache[variable] if cls.property_cache[variable] else default_value
+        # TODO: property getter
+        print(variable, default_value)
+        # v = getopt.getopt("", variable)
+        # if variable not in cls.property_cache:
+        #     v = getopt.getopt("", variable)
+        #     print(v)
+        #     if v[variable]:
+        #         cls.property_cache[variable] = v[variable]
+        #     else:
+        #         cls.property_cache[variable] = cls.config.get_nested(variable)
+        # return cls.property_cache[variable] if cls.property_cache[variable] else default_value
 
     def get_config_string(self, variable):
         pass

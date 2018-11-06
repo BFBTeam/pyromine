@@ -33,18 +33,17 @@ def main():
 
     args = parser.parse_args()
 
-    # if hasattr(args, 'func'):
-    #     command = args.func(args)
-    # else:
-    #     parser.print_help()
-    #     sys.exit(1)
+    if hasattr(args, 'func'):
+        command = args.func(args)
+    else:
+        try:
+            Server(DATA_PATH, PLUGIN_PATH)
+        except Exception as e:
+            logger.error(e)
 
-    try:
-        if not os.path.exists("server.properties"):
-            setup = Setup
-        Server(DATA_PATH, PLUGIN_PATH)
-    except Exception as e:
-        logger.error(e)
+        logger.info("Stopping other threads")
+
+
 
 
 if __name__ == '__main__':
