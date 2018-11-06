@@ -9,7 +9,7 @@ crashdumps/*
 *.log
 *.txt
 server.properties
-/pyromine.yml
+pyromine.yml
 memory_dumps/*
 resource_packs/
 
