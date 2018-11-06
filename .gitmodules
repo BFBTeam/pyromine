@@ -1,3 +1,3 @@
-[submodule "pyromine-language"]
-	path = pyromine-language
+[submodule "pyromine/lang/pyromine-language"]
+	path = pyromine/lang/pyromine-language
 	url = https://github.com/pyromine/pyromine-language.git
