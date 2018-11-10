@@ -140,7 +140,6 @@ class Config:
         return self.json_options
 
     def get(self, k, default=False):
-        print(self.config['motd'])
         return self.config[k] if self.config[k] else default
 
     def set(self, k, v=True):
@@ -149,6 +148,10 @@ class Config:
         for nkey, nvalue in self.nested_cache:
             if nkey[0:len(k) + 1] is k + ".":
                 del self.nested_cache[nkey]
+
+    def set_all(self, v):
+        self.config = v
+        self.changed = Trues
 
     def _write_properties(self) -> str:
         content = "#Properties Config file\r\n#" + time.strftime("%c") + "\r\n"
